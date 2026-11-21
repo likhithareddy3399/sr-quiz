@@ -56,6 +56,8 @@
   ol { margin:0; padding-left:22px; font-size:18px; font-weight:700; } ol li { margin:6px 0; }
   .cd { font-family: Fraunces, Georgia, serif; font-size: 140px; font-weight:800; text-align:center; line-height:1; animation: zoom .9s ease-out; }
   @keyframes zoom { from { transform: scale(1.8); opacity:0; } 30% { opacity:1; } to { transform: scale(1); } }
+  .ini { display:inline-flex; align-items:center; justify-content:center; flex:none; width:1.9em; height:1.9em; border-radius:50%; background: linear-gradient(135deg,#b4a8f6,#7d6fd6); color:#1e1a4d; font-weight:900; font-size:.8em; letter-spacing:.02em; vertical-align:middle; margin-right:.4em; }
+  .ini.big { width:96px; height:96px; font-size:36px; margin:0 auto; display:flex; }
   .spin { width:44px; height:44px; border-radius:50%; border:5px solid rgba(255,255,255,.25); border-top-color:var(--lav); animation: s 1s linear infinite; margin: 0 auto; }
   @keyframes s { to { transform: rotate(360deg); } }
   footer { margin-top:22px; text-align:center; font-size:11px; letter-spacing:.08em; color:var(--lav2); opacity:.75; }
@@ -80,8 +82,13 @@ let st = null, skew = 0, timer = null, poller = null, busy = false, names = [], 
 
 const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c]));
 const fold = (s) => String(s).toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+const initials = (name) => {
+  const w = String(name || "").replace(/^(sr|sister|fr|father|mr|mrs|ms|dr|br)\.?\s+/i, "").split(/[\s.]+/).filter(Boolean);
+  return ((w[0] || "?")[0] + (w.length > 1 ? w[w.length - 1][0] : "")).toUpperCase();
+};
+const ini = (name, cls) => `<span class="ini${cls ? " " + cls : ""}">${esc(initials(name))}</span>`;
 const save = () => { try { localStorage.setItem(KEY, JSON.stringify(me)); } catch (e) {} };
-const header = () => `<header><img src="sr-logo.png" alt="SR"><div class="brand"><b>SR Exam Pro</b><small>by SR Edu Technologies</small></div>${me ? `<span class="me">${esc(me.avatar || "")} ${esc(me.name)}<br>${st && st.phase !== "closed" ? (st.points || 0) + " pts" : ""}</span>` : ""}</header>`;
+const header = () => `<header><img src="sr-logo.png" alt="SR"><div class="brand"><b>SR Exam Pro</b><small>by SR Edu Technologies</small></div>${me ? `<span class="me">${esc(me.name)}<br>${st && st.phase !== "closed" ? (st.points || 0) + " pts" : ""}</span>` : ""}</header>`;
 const footer = `<footer><b>SR EDU TECHNOLOGIES PVT. LTD.</b>INNOVATE · EDUCATE · ELEVATE</footer>`;
 
 async function loadNames() {
@@ -150,7 +157,7 @@ function render() {
   if (!s) return;
   if (s.phase === "kicked") { stopPoll(); app.innerHTML = `${header()}<div class="center"><div class="avatar">🚫</div><h1>You are <em>disqualified</em></h1><p class="sub">You left the quiz screen during the game, or the host removed you. Thank you for taking part!</p></div>${footer}`; return; }
   if (s.phase === "lobby") {
-    app.innerHTML = `${header()}<div class="center"><div class="avatar">${esc(me.avatar || "🎉")}</div><h1>You're in, <em>${esc(me.name)}</em>!</h1>
+    app.innerHTML = `${header()}<div class="center">${ini(me.name, "big")}<h1>You're in, <em>${esc(me.name)}</em>!</h1>
       <p class="sub">Look at the screen. The quiz starts soon…</p><div class="card muted">${s.players} player${s.players === 1 ? "" : "s"} joined</div>
       <div class="card rules">⏱ 20 seconds per question<br>⚡ Correct and faster = more points<br>📵 Keep this screen open</div>
       <div class="warn">⚠️ Once the quiz starts, leaving this screen (switching apps, calls, closing) for more than 5 seconds will disqualify you.</div></div>${footer}`;

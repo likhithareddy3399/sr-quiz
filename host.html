@@ -81,6 +81,8 @@
   .lbr.moved .gain { opacity:1; }
   .lbr .mv { opacity:0; transition: opacity .4s 1s; } .lbr.moved .mv { opacity:1; }
   .lbr .pt { min-width: 9vw; text-align:right; font-size: 3.6vh; }
+  .ini { display:inline-flex; align-items:center; justify-content:center; flex:none; width:1.9em; height:1.9em; border-radius:50%; background: linear-gradient(135deg,#b4a8f6,#7d6fd6); color:#1e1a4d; font-weight:900; font-size:.8em; letter-spacing:.02em; vertical-align:middle; margin-right:.4em; }
+  .pod .ini { width:2.2em; height:2.2em; font-size: 3.2vh; margin: 0 auto 1vh; display:flex; }
   .podium { display:flex; align-items:flex-end; justify-content:center; gap: 2vw; margin-top: 2vh; }
   .pod { width: 22vw; max-width: 320px; text-align:center; }
   .pod .who { font-size: 3.4vh; font-weight:800; margin-bottom: 1vh; }
@@ -107,6 +109,11 @@ const ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZ
 const rpc = (fn, args) => fetch(RPC + fn, { method: "POST", cache: "no-store", headers: { "content-type": "application/json", apikey: ANON, authorization: "Bearer " + ANON }, body: JSON.stringify(args) }).then((r) => r.json());
 const app = document.getElementById("app");
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c]));
+const initials = (name) => {
+  const w = String(name || "").replace(/^(sr|sister|fr|father|mr|mrs|ms|dr|br)\.?\s+/i, "").split(/[\s.]+/).filter(Boolean);
+  return ((w[0] || "?")[0] + (w.length > 1 ? w[w.length - 1][0] : "")).toUpperCase();
+};
+const ini = (name, cls) => `<span class="ini${cls ? " " + cls : ""}">${esc(initials(name))}</span>`;
 let pin = ""; try { pin = localStorage.getItem("srq-host-pin") || ""; } catch {}
 let st = null, skew = 0, view = null, showBoard = false, closedFor = -1, busy = false, poller = null, ticker = null, sig = "";
 
@@ -173,17 +180,17 @@ function render() {
       <div class="steps"><span>① Scan</span><span>② Find or type your name</span><span>③ Play!</span></div>
       <div style="color:var(--lav2);font-size:2.2vh;font-weight:700">SR Edu Technologies invites you to play!</div></section>
       <section class="r"><div class="count"><span class="n">${s.count}</span> <span class="l2">players joined</span></div>
-      <div class="names">${s.players.map((p) => `<span class="chip">${esc(p.avatar)} ${esc(p.name)}</span>`).join("")}</div>
+      <div class="names">${s.players.map((p) => `<span class="chip">${ini(p.name)}${esc(p.name)}</span>`).join("")}</div>
       <div class="bar" style="margin-top:2vh"><button class="btn" onclick="if(confirm('Close this lobby and open a new one?'))act('open')">↺ New lobby</button>
       <button class="btn main" ${s.count ? "" : "disabled"} onclick="act('start')">Start quiz ▶</button></div></section></div>${foot}`;
     return;
   }
   if (s.phase === "ended") {
     const b = s.board || [];
-    const pod = (p, cls, n) => p ? `<div class="pod ${cls}"><div class="av">${esc(p.avatar)}</div><div class="who">${esc(p.name)}</div><div class="blk">${n}<small>${p.points} pts</small></div></div>` : "";
+    const pod = (p, cls, n) => p ? `<div class="pod ${cls}">${ini(p.name)}<div class="who">${esc(p.name)}</div><div class="blk">${n}<small>${p.points} pts</small></div></div>` : "";
     app.innerHTML = `${topBar()}<div class="center" style="justify-content:flex-start"><h1 style="font-size:6vh">🏆 <em>Winners</em></h1>
       <div class="podium">${pod(b[1], "p2", 2)}${pod(b[0], "p1", 1)}${pod(b[2], "p3", 3)}</div>
-      <div class="board" style="margin-top:2vh">${b.slice(3, 8).map((p, i) => `<div class="row" style="animation-delay:${i * 80}ms"><span class="rk">${p.rank}</span><span>${esc(p.avatar)}</span><span class="nm">${esc(p.name)}</span><span class="pt">${p.points}</span></div>`).join("")}</div>
+      <div class="board" style="margin-top:2vh">${b.slice(3, 8).map((p, i) => `<div class="row" style="animation-delay:${i * 80}ms"><span class="rk">${p.rank}</span>${ini(p.name)}<span class="nm">${esc(p.name)}</span><span class="pt">${p.points}</span></div>`).join("")}</div>
       <div class="bar"><button class="btn" onclick="if(confirm('Open a new game? Everyone will need to join again.'))act('open')">Open a new game</button></div></div>${foot}`;
     confetti();
     return;
@@ -211,7 +218,7 @@ function render() {
     app.innerHTML = `${topBar()}<div class="stage">${header}<h1 style="font-size:4.4vh;text-align:center;margin:.6vh 0 1.2vh">🏅 <em>Leaderboard</em></h1>
       <div class="lb" style="height:${b.length * H}vh">${b.map((p) => {
         const mv = p.prev ? p.prev - p.rank : 0;
-        return `<div class="row lbr" style="transform:translateY(${was.get(p.name) * H}vh)"><span class="rk">${p.prev || "–"}</span><span class="av2">${esc(p.avatar)}</span><span class="nm">${esc(p.name)}<span class="mv">${mv > 0 ? ` <span class="up">▲${mv}</span>` : mv < 0 ? ` <span class="dn">▼${-mv}</span>` : ""}</span></span>${p.last ? `<span class="gain">+${p.last}</span>` : ""}<span class="pt" data-from="${p.points - p.last}" data-to="${p.points}">${p.points - p.last}</span></div>`;
+        return `<div class="row lbr" style="transform:translateY(${was.get(p.name) * H}vh)"><span class="rk">${p.prev || "–"}</span>${ini(p.name)}<span class="nm">${esc(p.name)}<span class="mv">${mv > 0 ? ` <span class="up">▲${mv}</span>` : mv < 0 ? ` <span class="dn">▼${-mv}</span>` : ""}</span></span>${p.last ? `<span class="gain">+${p.last}</span>` : ""}<span class="pt" data-from="${p.points - p.last}" data-to="${p.points}">${p.points - p.last}</span></div>`;
       }).join("")}</div>
       <div class="bar" style="margin-top:2vh"><button class="btn" onclick="showBoard=false;render()">◀ Back</button><button class="btn main" onclick="act('next',{index:${s.index}})">${s.last ? "Finish quiz 🏁" : "Next question ▶"}</button></div></div>${foot}`;
     setTimeout(() => {
@@ -235,7 +242,7 @@ function render() {
       return `<div class="opt o${i % 4} ${shown ? (right ? "right" : "dim") : ""}" style="--w:${o.count / total}"><span class="fill"></span><span class="l">${right ? "✓" : "ABCD"[i]}</span><span class="tx">${esc(o.text)}</span><span class="ct">${o.count}</span></div>`;
     }).join("")}</div>
     ${shown && s.explanation ? `<div class="expl">${esc(s.explanation)}</div>` : ""}
-    ${shown && s.fastest ? `<div class="expl" style="color:#fde68a;font-weight:800;font-size:2.8vh">⚡ Fastest correct: ${esc(s.fastest.avatar)} ${esc(s.fastest.name)} in ${(s.fastest.timeMs / 1000).toFixed(1)} s</div>` : ""}
+    ${shown && s.fastest ? `<div class="expl" style="color:#fde68a;font-weight:800;font-size:2.8vh">⚡ Fastest correct: ${esc(s.fastest.name)} in ${(s.fastest.timeMs / 1000).toFixed(1)} s</div>` : ""}
     <div class="info"><span class="big">${shown ? `🎉 ${s.rightCount} of ${s.answered} got it right` : `⏰ Time's up! ${s.answered} of ${s.count} answered`}</span>
       <span class="bar">${shown
         ? `<button class="btn" onclick="showBoard=true;render()">🏅 Leaderboard</button><button class="btn main" onclick="act('next',{index:${s.index}})">${s.last ? "Finish quiz 🏁" : "Next question ▶"}</button>`
