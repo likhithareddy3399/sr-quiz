@@ -62,22 +62,27 @@
 <body>
 <main id="app"><div class="center"><div class="spin"></div></div></main>
 <script>
-const API = "https://dewmtikofokfugcidxqa.supabase.co/functions/v1/sr-quiz";
+const RPC = "https://dewmtikofokfugcidxqa.supabase.co/rest/v1/rpc/";
+const ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRld210aWtvZm9rZnVnY2lkeHFhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE1MzIyNjUsImV4cCI6MjEwNzEwODI2NX0.VR9M_NO68ES6Aqhutmp7L3HXxcM2_uFIEOMCwimJqe0"; // public (anon) key: these calls only reach the lg_* game functions
+function rpc(fn, args) {
+  return fetch(RPC + fn, { method: "POST", cache: "no-store", headers: { "content-type": "application/json", apikey: ANON, authorization: "Bearer " + ANON }, body: JSON.stringify(args) })
+    .then(function (r) { return r.json(); });
+}
 const CODE = new URLSearchParams(location.search).get("code") || "";
 const KEY = "srq-player" + (CODE ? "-" + CODE : "");
 const POLL_MS = 2500;
 const app = document.getElementById("app");
-let me = null; try { me = JSON.parse(localStorage.getItem(KEY) || "null"); } catch {}
+let me = null; try { me = JSON.parse(localStorage.getItem(KEY) || "null"); } catch (e) {}
 let st = null, skew = 0, timer = null, poller = null, busy = false, names = [], view = null;
 
-const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c]));
+const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c]));
 const fold = (s) => String(s).toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
-const save = () => { try { localStorage.setItem(KEY, JSON.stringify(me)); } catch {} };
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(me)); } catch (e) {} };
 const header = () => `<header><img src="sr-logo.png" alt="SR"><div class="brand"><b>SR Exam Pro</b><small>by SR Edu Technologies</small></div>${me ? `<span class="me">${esc(me.avatar || "")} ${esc(me.name)}<br>${st && st.phase !== "closed" ? (st.points || 0) + " pts" : ""}</span>` : ""}</header>`;
 const footer = `<footer><b>SR EDU TECHNOLOGIES PVT. LTD.</b>INNOVATE · EDUCATE · ELEVATE</footer>`;
 
 async function loadNames() {
-  try { const r = await fetch(`${API}/info${CODE ? "?code=" + CODE : ""}`, { cache: "no-store" }).then((r) => r.json()); names = r.names || []; } catch { names = []; }
+  try { const r = await rpc("lg_info", { p_code: CODE || null }); names = (r && r.names) || []; } catch (e) { names = []; }
 }
 
 function showJoin(msg) {
@@ -109,11 +114,11 @@ function showJoin(msg) {
     if (name.length < 2) return showJoin("Type your name (at least 2 letters).");
     go.disabled = true; go.textContent = "Joining…";
     try {
-      const r = await fetch(API + "/join", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ name, code: CODE || undefined }) }).then((r) => r.json());
-      if (r.error) return showJoin(r.error);
+      const r = await rpc("lg_join", { p_name: name, p_code: CODE || null });
+      if (!r || r.error || !r.playerId) return showJoin((r && (r.error || r.message)) || "Couldn't join. Try again.");
       me = { p: r.playerId, s: r.seat, name: r.name, avatar: r.avatar }; save();
       startPoll();
-    } catch { showJoin("No internet connection. Try again."); }
+    } catch (e) { showJoin("No internet connection. Try again."); }
   };
 }
 
@@ -122,14 +127,14 @@ async function refresh() {
   busy = true;
   try {
     const t0 = Date.now();
-    const res = await fetch(`${API}/state?p=${encodeURIComponent(me.p)}&s=${encodeURIComponent(me.s)}`, { cache: "no-store" });
-    if (res.status === 404) { me = null; try { localStorage.removeItem(KEY); } catch {} await loadNames(); return showJoin("That game has finished. Join the new one."); }
-    const next = await res.json();
+    const next = await rpc("lg_state", { p_player: me.p, p_seat: me.s });
+    if (next && next.error === "gone") { me = null; try { localStorage.removeItem(KEY); } catch (e) {} await loadNames(); return showJoin("That game has finished. Join the new one."); }
+    if (!next || !next.serverNow) return; // server busy or a hiccup: keep the screen, retry on the next poll
     skew = new Date(next.serverNow).getTime() - (t0 + Date.now()) / 2;
     const changed = !st || st.phase !== next.phase || st.index !== next.index || st.answered !== next.answered || st.paused !== next.paused || st.players !== next.players;
     st = next;
     if (changed) render();
-  } catch { /* keep the current screen; next poll retries */ }
+  } catch (e) { /* keep the current screen; next poll retries */ }
   finally { busy = false; }
 }
 function startPoll() { stopPoll(); refresh(); poller = setInterval(refresh, POLL_MS); }
@@ -152,7 +157,7 @@ function render() {
       <p class="muted">Thank you for playing!</p>
       <button class="big" id="again" style="background:#fff;box-shadow:0 5px 0 #c4b5fd">Join a new game</button></div>${footer}`;
     stopPoll();
-    document.getElementById("again").onclick = async () => { me = null; st = null; try { localStorage.removeItem(KEY); } catch {} await loadNames(); showJoin(); };
+    document.getElementById("again").onclick = async () => { me = null; st = null; try { localStorage.removeItem(KEY); } catch (e) {} await loadNames(); showJoin(); };
     return;
   }
   if (s.phase === "unsupported" || s.phase === "wait") { app.innerHTML = `${header()}<div class="center"><h1>Get <em>ready…</em></h1><div class="spin"></div></div>${footer}`; return; }
@@ -209,10 +214,10 @@ async function send(itemId, choice) {
   app.querySelectorAll(".opt").forEach((b) => { b.disabled = true; b.classList.add(b.dataset.id === choice ? "pick" : "dim"); });
   const msg = document.getElementById("msg"); if (msg) msg.textContent = "Sending…";
   try {
-    const r = await fetch(API + "/answer", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ p: me.p, s: me.s, itemId, choice }) }).then((r) => r.json());
+    const r = await rpc("lg_answer", { p_player: me.p, p_seat: me.s, p_item: itemId, p_choice: choice });
     if (r.error && msg) msg.textContent = r.error;
     else if (msg) msg.textContent = "✅ Answer locked. Wait for the result…";
-  } catch { if (msg) msg.textContent = "No connection. Tap again."; app.querySelectorAll(".opt").forEach((b) => { b.disabled = false; b.classList.remove("dim", "pick"); }); return; }
+  } catch (e) { if (msg) msg.textContent = "No connection. Tap again."; app.querySelectorAll(".opt").forEach((b) => { b.disabled = false; b.classList.remove("dim", "pick"); }); return; }
   st.answered = true; st.myChoice = choice;
   refresh();
 }
