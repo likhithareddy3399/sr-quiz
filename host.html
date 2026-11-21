@@ -67,8 +67,8 @@
   .info .big { font-size: 3vh; font-weight:800; }
   .expl { margin-top: 1.6vh; font-size: 2.6vh; color: var(--lav2); text-align:center; }
   /* leaderboard + podium */
-  .board { width: min(1000px, 90%); margin: 0 auto; display:flex; flex-direction:column; gap: 1.1vh; }
-  .row { display:flex; align-items:center; gap: 1.4vw; background: rgba(255,255,255,.1); border:1px solid var(--line); border-radius: 16px; padding: 1.2vh 1.6vw; font-size: 2.8vh; font-weight:800; animation: pop .4s ease-out both; }
+  .board { width: min(1000px, 90%); margin: 0 auto; display:flex; flex-direction:column; gap: .7vh; }
+  .row { display:flex; align-items:center; gap: 1.4vw; background: rgba(255,255,255,.1); border:1px solid var(--line); border-radius: 14px; padding: .75vh 1.6vw; font-size: 2.4vh; font-weight:800; animation: pop .4s ease-out both; }
   .row .rk { width: 5vh; text-align:center; font-family: Fraunces, Georgia, serif; }
   .row .nm { flex:1; }
   .row .pt { font-family: Fraunces, Georgia, serif; }
@@ -76,11 +76,11 @@
   .podium { display:flex; align-items:flex-end; justify-content:center; gap: 2vw; margin-top: 2vh; }
   .pod { width: 22vw; max-width: 320px; text-align:center; }
   .pod .who { font-size: 2.8vh; font-weight:800; margin-bottom: 1vh; }
-  .pod .av { font-size: 7vh; }
+  .pod .av { font-size: 5.5vh; }
   .pod .blk { border-radius: 18px 18px 0 0; display:flex; flex-direction:column; align-items:center; justify-content:flex-start; padding-top: 1.6vh; font-family: Fraunces, Georgia, serif; font-weight:800; font-size: 6vh; }
-  .p1 .blk { height: 30vh; background: linear-gradient(#facc15,#ca8a04); color: var(--ink); }
-  .p2 .blk { height: 22vh; background: linear-gradient(#e5e7eb,#9ca3af); color: var(--ink); }
-  .p3 .blk { height: 16vh; background: linear-gradient(#fdba74,#c2410c); color: var(--ink); }
+  .p1 .blk { height: 22vh; background: linear-gradient(#facc15,#ca8a04); color: var(--ink); }
+  .p2 .blk { height: 16vh; background: linear-gradient(#e5e7eb,#9ca3af); color: var(--ink); }
+  .p3 .blk { height: 11vh; background: linear-gradient(#fdba74,#c2410c); color: var(--ink); }
   .pod .blk small { font-family: Inter, sans-serif; font-size: 2.2vh; font-weight:800; }
   .pin { width: 280px; font: 900 34px Inter, sans-serif; text-align:center; letter-spacing:.3em; padding: 14px; border-radius:18px; border:0; color: var(--ink); }
   .err { background: rgba(225,29,72,.92); padding:10px 16px; border-radius:14px; font-weight:800; }
@@ -100,7 +100,7 @@ const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&":"&amp;", "<
 let pin = ""; try { pin = localStorage.getItem("srq-host-pin") || ""; } catch {}
 let st = null, skew = 0, view = null, showBoard = false, closedFor = -1, busy = false, poller = null, ticker = null, sig = "";
 
-const top = () => `<div class="top"><img src="sr-logo.png" alt="SR"><div class="t"><b>SR Exam Pro</b><small>by SR Edu Technologies</small></div>
+const topBar = () => `<div class="top"><img src="sr-logo.png" alt="SR"><div class="t"><b>SR Exam Pro</b><small>by SR Edu Technologies</small></div>
   <div class="mid">${esc(st?.title || "Live Quiz")}</div>${st && st.phase !== "none" ? `<span class="pill">👥 ${st.count}</span>` : ""}</div>`;
 const foot = `<div class="foot">SR EDU TECHNOLOGIES PVT. LTD. · INNOVATE · EDUCATE · ELEVATE</div>`;
 
@@ -115,7 +115,7 @@ async function act(action, extra) {
 
 function pinScreen(msg) {
   stop();
-  app.innerHTML = `${top()}<div class="center"><img src="sr-logo.png" style="width:16vh;border-radius:50%" alt=""><h1 style="font-size:6vh">Host the <em>live quiz</em></h1>
+  app.innerHTML = `${topBar()}<div class="center"><img src="sr-logo.png" style="width:16vh;border-radius:50%" alt=""><h1 style="font-size:6vh">Host the <em>live quiz</em></h1>
     <p style="color:var(--lav2);font-size:2.4vh;margin:0">Enter your host PIN</p>
     <input class="pin" id="pin" inputmode="numeric" maxlength="6" autocomplete="off">
     <button class="btn main" id="go">Continue ▶</button>${msg ? `<div class="err">${esc(msg)}</div>` : ""}</div>${foot}`;
@@ -152,13 +152,13 @@ function render() {
   const s = st; if (!s) return;
   view = null;
   if (s.phase === "none") {
-    app.innerHTML = `${top()}<div class="center"><img src="sr-logo.png" style="width:18vh;border-radius:50%" alt=""><h1 style="font-size:7vh">${esc(s.title).replace(/Quiz$/, "<em>Quiz</em>")}</h1>
+    app.innerHTML = `${topBar()}<div class="center"><img src="sr-logo.png" style="width:18vh;border-radius:50%" alt=""><h1 style="font-size:7vh">${esc(s.title).replace(/Quiz$/, "<em>Quiz</em>")}</h1>
       <p style="color:var(--lav2);font-size:2.6vh;margin:0">${12} questions · players join by scanning a QR code</p>
       <button class="btn main" onclick="act('open')">Open the game ▶</button></div>${foot}`;
     return;
   }
   if (s.phase === "lobby") {
-    app.innerHTML = `${top()}<div class="lobby"><section class="l"><h1 style="font-size:5.4vh">Scan to <em>join!</em></h1>
+    app.innerHTML = `${topBar()}<div class="lobby"><section class="l"><h1 style="font-size:5.4vh">Scan to <em>join!</em></h1>
       <div class="qr"><img src="qr.png" alt="QR code"></div>
       <div class="steps"><span>① Scan</span><span>② Find or type your name</span><span>③ Play!</span></div>
       <div style="color:var(--lav2);font-size:2vh">or open <b style="color:#fff">${JOIN_URL}</b></div></section>
@@ -171,9 +171,9 @@ function render() {
   if (s.phase === "ended") {
     const b = s.board || [];
     const pod = (p, cls, n) => p ? `<div class="pod ${cls}"><div class="av">${esc(p.avatar)}</div><div class="who">${esc(p.name)}</div><div class="blk">${n}<small>${p.points} pts</small></div></div>` : "";
-    app.innerHTML = `${top()}<div class="center" style="justify-content:flex-start"><h1 style="font-size:6vh">🏆 <em>Winners</em></h1>
+    app.innerHTML = `${topBar()}<div class="center" style="justify-content:flex-start"><h1 style="font-size:6vh">🏆 <em>Winners</em></h1>
       <div class="podium">${pod(b[1], "p2", 2)}${pod(b[0], "p1", 1)}${pod(b[2], "p3", 3)}</div>
-      <div class="board" style="margin-top:2vh">${b.slice(3, 10).map((p, i) => `<div class="row" style="animation-delay:${i * 80}ms"><span class="rk">${p.rank}</span><span>${esc(p.avatar)}</span><span class="nm">${esc(p.name)}</span><span class="pt">${p.points}</span></div>`).join("")}</div>
+      <div class="board" style="margin-top:2vh">${b.slice(3, 8).map((p, i) => `<div class="row" style="animation-delay:${i * 80}ms"><span class="rk">${p.rank}</span><span>${esc(p.avatar)}</span><span class="nm">${esc(p.name)}</span><span class="pt">${p.points}</span></div>`).join("")}</div>
       <div class="bar"><button class="btn" onclick="if(confirm('Open a new game? Everyone will need to join again.'))act('open')">Open a new game</button></div></div>${foot}`;
     confetti();
     return;
@@ -182,9 +182,9 @@ function render() {
   const q = s.question;
   const header = `<div class="bar" style="justify-content:space-between"><span class="pill">Question ${s.index + 1} of ${s.total}</span>${s.paused ? `<span class="pill">⏸ Paused</span>` : ""}<span class="pill">Code ${esc(s.code)}</span></div>`;
   if (s.phase === "question") {
-    if (now() < new Date(s.startedAt).getTime()) { view = "countdown"; app.innerHTML = `${top()}<div class="center"><div class="pill" style="font-size:3vh">Question ${s.index + 1} of ${s.total}</div><div class="cd" id="cd">3</div><div style="font-size:3vh;color:var(--lav2);font-weight:700">Get ready…</div></div>${foot}`; tick(); return; }
+    if (now() < new Date(s.startedAt).getTime()) { view = "countdown"; app.innerHTML = `${topBar()}<div class="center"><div class="pill" style="font-size:3vh">Question ${s.index + 1} of ${s.total}</div><div class="cd" id="cd">3</div><div style="font-size:3vh;color:var(--lav2);font-weight:700">Get ready…</div></div>${foot}`; tick(); return; }
     view = "question";
-    app.innerHTML = `${top()}<div class="stage">${header}
+    app.innerHTML = `${topBar()}<div class="stage">${header}
       <div class="qrow" style="margin-top:2vh"><div class="stem">${esc(q.stem)}</div><div class="timer" id="tm"><span id="tv">--</span></div></div>
       <div class="opts">${q.options.map((o, i) => `<div class="opt o${i % 4}"><span class="l">${"ABCD"[i]}</span><span class="tx">${esc(o.text)}</span></div>`).join("")}</div>
       <div class="info"><span class="big">✋ ${s.answered} of ${s.count} answered</span>
@@ -194,7 +194,7 @@ function render() {
   }
   // review
   if (showBoard) {
-    app.innerHTML = `${top()}<div class="stage">${header}<h1 style="font-size:5.4vh;text-align:center;margin:2vh 0">🏅 <em>Leaderboard</em></h1>
+    app.innerHTML = `${topBar()}<div class="stage">${header}<h1 style="font-size:4.6vh;text-align:center;margin:1vh 0">🏅 <em>Leaderboard</em></h1>
       <div class="board">${(s.board || []).map((p, i) => {
         const mv = p.prev ? p.prev - p.rank : 0;
         return `<div class="row" style="animation-delay:${i * 70}ms"><span class="rk">${p.rank}</span><span>${esc(p.avatar)}</span><span class="nm">${esc(p.name)} ${mv > 0 ? `<span class="up">▲${mv}</span>` : mv < 0 ? `<span class="dn">▼${-mv}</span>` : ""}</span><span class="pt">${p.points}</span></div>`;
@@ -204,7 +204,7 @@ function render() {
   }
   const total = Math.max(1, s.answered);
   const shown = s.answerShown;
-  app.innerHTML = `${top()}<div class="stage">${header}
+  app.innerHTML = `${topBar()}<div class="stage">${header}
     <div class="qrow" style="margin-top:2vh"><div class="stem">${esc(q.stem)}</div></div>
     <div class="opts">${q.options.map((o, i) => {
       const right = shown && s.correct && s.correct.includes(o.id);
