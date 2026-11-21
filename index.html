@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SR Exam Pro · Live Quiz</title>
+<meta name="theme-color" content="#4c1d95">
+<style>
+  :root { --bg1:#312e81; --bg2:#6d28d9; --bg3:#be185d; --card:rgba(255,255,255,.14); --ok:#16a34a; --bad:#e11d48; }
+  * { box-sizing: border-box; }
+  html, body { margin:0; min-height:100%; }
+  body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color:#fff; background: linear-gradient(135deg,var(--bg1),var(--bg2) 50%,var(--bg3)); background-attachment: fixed; }
+  main { max-width: 560px; margin: 0 auto; padding: 20px 16px 40px; min-height: 100dvh; display:flex; flex-direction:column; }
+  header { display:flex; align-items:center; justify-content:space-between; gap:8px; font-weight:800; }
+  header .me { font-size:14px; opacity:.9; text-align:right; }
+  .brand { font-size:15px; letter-spacing:.02em; }
+  .center { flex:1; display:flex; flex-direction:column; justify-content:center; gap:16px; }
+  h1 { font-size: 30px; margin:0; text-align:center; line-height:1.2; }
+  p.sub { margin:0; text-align:center; opacity:.85; font-size:17px; }
+  .card { background: var(--card); border-radius: 22px; padding: 18px; backdrop-filter: blur(6px); }
+  input { width:100%; font-size:22px; font-weight:700; padding:16px 18px; border-radius:18px; border:0; outline:none; color:#111827; }
+  button { font: inherit; cursor:pointer; border:0; }
+  .big { width:100%; font-size:22px; font-weight:800; padding:16px; border-radius:18px; background:#facc15; color:#1f2937; box-shadow:0 5px 0 #ca8a04; }
+  .big:disabled { opacity:.55; }
+  .err { background: rgba(225,29,72,.92); padding:10px 14px; border-radius:14px; font-weight:700; text-align:center; }
+  .qhead { display:flex; justify-content:space-between; align-items:center; font-weight:800; margin:14px 0 8px; }
+  .timer { font-variant-numeric: tabular-nums; background: rgba(0,0,0,.25); padding:6px 12px; border-radius:999px; }
+  .stem { font-size:21px; font-weight:800; line-height:1.35; }
+  .opts { display:grid; gap:12px; margin-top:16px; }
+  .opt { display:flex; align-items:center; gap:12px; text-align:left; width:100%; padding:16px; border-radius:18px; font-size:18px; font-weight:700; color:#fff; min-height:64px; }
+  .opt .l { flex:none; width:34px; height:34px; border-radius:10px; background:rgba(255,255,255,.25); display:flex; align-items:center; justify-content:center; font-weight:900; }
+  .o0 { background:#e11d48; } .o1 { background:#2563eb; } .o2 { background:#d97706; } .o3 { background:#16a34a; }
+  .opt.dim { opacity:.35; } .opt.pick { outline: 4px solid #fff; }
+  .opt.right { outline: 4px solid #bbf7d0; } .opt.wrong { opacity:.4; }
+  .result { font-size:28px; font-weight:900; text-align:center; }
+  .pts { font-size:44px; font-weight:900; text-align:center; }
+  .muted { opacity:.8; text-align:center; }
+  .avatar { font-size:64px; text-align:center; }
+  ol { margin:0; padding-left:22px; font-size:18px; font-weight:700; } ol li { margin:6px 0; }
+  .spin { width:44px; height:44px; border-radius:50%; border:5px solid rgba(255,255,255,.3); border-top-color:#fff; animation: s 1s linear infinite; margin: 0 auto; }
+  @keyframes s { to { transform: rotate(360deg); } }
+  footer { margin-top:20px; text-align:center; font-size:12px; opacity:.6; }
+</style>
+</head>
+<body>
+<main id="app"><div class="center"><div class="spin"></div></div></main>
+<script>
+const API = "https://dewmtikofokfugcidxqa.supabase.co/functions/v1/sr-quiz";
+const CODE = new URLSearchParams(location.search).get("code") || "";
+const KEY = "srq-player" + (CODE ? "-" + CODE : "");
+const POLL_MS = 2500;
+const app = document.getElementById("app");
+let me = null; try { me = JSON.parse(localStorage.getItem(KEY) || "null"); } catch {}
+let st = null, skew = 0, timer = null, poller = null, busy = false, lastErr = "";
+
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c]));
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(me)); } catch {} };
+const header = () => `<header><span class="brand">SR Exam Pro · Live Quiz</span>${me ? `<span class="me">${esc(me.avatar || "")} ${esc(me.name)}<br>${st ? (st.points || 0) + " pts" : ""}</span>` : ""}</header>`;
+const footer = `<footer>Powered by SR Exam Pro</footer>`;
+
+function showJoin(msg) {
+  stopPoll();
+  app.innerHTML = `${header()}<div class="center">
+    <div class="avatar">🎮</div>
+    <h1>Join the live quiz</h1>
+    <p class="sub">Type your name and tap Join</p>
+    <input id="name" maxlength="40" autocomplete="off" placeholder="Your name" aria-label="Your name">
+    <button class="big" id="go">Join ▶</button>
+    ${msg ? `<div class="err" role="alert">${esc(msg)}</div>` : ""}
+  </div>${footer}`;
+  const input = document.getElementById("name"), go = document.getElementById("go");
+  input.focus();
+  input.addEventListener("keydown", (e) => { if (e.key === "Enter") go.click(); });
+  go.onclick = async () => {
+    const name = input.value.trim();
+    if (name.length < 2) return showJoin("Type your name (at least 2 letters).");
+    go.disabled = true; go.textContent = "Joining…";
+    try {
+      const r = await fetch(API + "/join", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ name, code: CODE || undefined }) }).then((r) => r.json());
+      if (r.error) return showJoin(r.error);
+      me = { p: r.playerId, s: r.seat, name: r.name, avatar: r.avatar }; save();
+      startPoll();
+    } catch { showJoin("No internet connection. Try again."); }
+  };
+}
+
+async function refresh() {
+  if (!me || busy) return;
+  busy = true;
+  try {
+    const t0 = Date.now();
+    const res = await fetch(`${API}/state?p=${encodeURIComponent(me.p)}&s=${encodeURIComponent(me.s)}`, { cache: "no-store" });
+    if (res.status === 404) { me = null; try { localStorage.removeItem(KEY); } catch {} return showJoin("That game has finished. Join the new one."); }
+    const next = await res.json();
+    skew = new Date(next.serverNow).getTime() - (t0 + Date.now()) / 2;
+    const changed = !st || st.phase !== next.phase || st.index !== next.index || st.answered !== next.answered || st.paused !== next.paused || st.players !== next.players;
+    st = next; lastErr = "";
+    if (changed) render();
+  } catch { /* keep the current screen; next poll retries */ }
+  finally { busy = false; }
+}
+function startPoll() { stopPoll(); refresh(); poller = setInterval(refresh, POLL_MS); }
+function stopPoll() { if (poller) clearInterval(poller); poller = null; if (timer) clearInterval(timer); timer = null; }
+
+function render() {
+  if (timer) { clearInterval(timer); timer = null; }
+  const s = st;
+  if (!s) return;
+  if (s.phase === "kicked") { stopPoll(); app.innerHTML = `${header()}<div class="center"><h1>You were removed from this game</h1></div>`; return; }
+  if (s.phase === "lobby") {
+    app.innerHTML = `${header()}<div class="center"><div class="avatar">${esc(me.avatar || "🎉")}</div><h1>You're in, ${esc(me.name)}!</h1>
+      <p class="sub">Waiting for the quiz to start…</p><div class="card muted">${s.players} player${s.players === 1 ? "" : "s"} joined</div><div class="spin"></div></div>${footer}`;
+    return;
+  }
+  if (s.phase === "ended") {
+    app.innerHTML = `${header()}<div class="center"><div class="avatar">🏆</div><h1>Quiz over!</h1>
+      <div class="pts">${s.points} pts</div><p class="sub">You came <b>#${s.rank}</b></p>
+      ${s.top && s.top.length ? `<div class="card"><b>Top players</b><ol>${s.top.map((t) => `<li>${esc(t.display_name)} · ${t.points}</li>`).join("")}</ol></div>` : ""}
+      <p class="muted">Thank you for playing!</p>
+      <button class="big" id="again" style="background:#fff;box-shadow:0 5px 0 #c4b5fd">Join a new game</button></div>${footer}`;
+    stopPoll();
+    document.getElementById("again").onclick = () => { me = null; st = null; try { localStorage.removeItem(KEY); } catch {} showJoin(); };
+    return;
+  }
+  if (s.phase === "unsupported" || s.phase === "wait") { app.innerHTML = `${header()}<div class="center"><h1>Get ready…</h1><div class="spin"></div></div>`; return; }
+  const q = s.question;
+  const head = `<div class="qhead"><span>Question ${s.index + 1} of ${s.total}</span>${s.phase === "question" ? `<span class="timer" id="t">--</span>` : ""}</div>`;
+  if (s.phase === "question") {
+    const answered = s.answered;
+    app.innerHTML = `${header()}${head}<div class="card stem">${esc(q.stem)}</div>
+      <div class="opts">${q.options.map((o, i) => `<button class="opt o${i % 4} ${answered ? (o.id === s.myChoice ? "pick" : "dim") : ""}" data-id="${esc(o.id)}" ${answered ? "disabled" : ""}><span class="l">${"ABCD"[i] || ""}</span><span>${esc(o.text)}</span></button>`).join("")}</div>
+      <p class="muted" id="msg" style="margin-top:14px">${answered ? "✅ Answer locked. Wait for the result…" : s.paused ? "⏸ Paused" : "Tap your answer"}</p>${footer}`;
+    if (!answered) app.querySelectorAll(".opt").forEach((b) => (b.onclick = () => send(q.itemId, b.dataset.id)));
+    tick(); timer = setInterval(tick, 250);
+    return;
+  }
+  // review
+  const verdict = !s.answered ? "⏰ No answer" : s.gotIt ? "🎉 Correct!" : "❌ Not this time";
+  app.innerHTML = `${header()}${head}<div class="card stem">${esc(q.stem)}</div>
+    <div class="opts">${q.options.map((o, i) => {
+      const right = s.correct && s.correct.includes(o.id);
+      return `<div class="opt o${i % 4} ${right ? "right" : "wrong"} ${o.id === s.myChoice ? "pick" : ""}"><span class="l">${right ? "✓" : "ABCD"[i] || ""}</span><span>${esc(o.text)}</span></div>`;
+    }).join("")}</div>
+    <div class="card" style="margin-top:16px"><div class="result">${verdict}</div>
+      <div class="pts">+${s.lastPoints || 0}</div>
+      <p class="muted">Total ${s.points} pts · You are #${s.rank}</p>
+      ${s.explanation ? `<p class="muted" style="margin-top:8px">${esc(s.explanation)}</p>` : ""}</div>${footer}`;
+}
+
+function tick() {
+  const el = document.getElementById("t");
+  if (!el || !st || st.phase !== "question" || !st.startedAt) return;
+  const left = Math.max(0, Math.ceil((new Date(st.startedAt).getTime() + st.limitMs - (Date.now() + skew)) / 1000));
+  el.textContent = st.paused ? "⏸" : left + "s";
+}
+
+async function send(itemId, choice) {
+  app.querySelectorAll(".opt").forEach((b) => { b.disabled = true; b.classList.add(b.dataset.id === choice ? "pick" : "dim"); });
+  const msg = document.getElementById("msg"); if (msg) msg.textContent = "Sending…";
+  try {
+    const r = await fetch(API + "/answer", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ p: me.p, s: me.s, itemId, choice }) }).then((r) => r.json());
+    if (r.error && msg) msg.textContent = r.error;
+    else if (msg) msg.textContent = "✅ Answer locked. Wait for the result…";
+  } catch { if (msg) msg.textContent = "No connection. Tap again."; app.querySelectorAll(".opt").forEach((b) => { b.disabled = false; b.classList.remove("dim", "pick"); }); return; }
+  st.answered = true; st.myChoice = choice;
+  refresh();
+}
+
+if (me && me.p) startPoll(); else showJoin();
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && me) refresh(); });
+</script>
+</body>
+</html>
