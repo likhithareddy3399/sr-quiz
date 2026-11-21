@@ -153,7 +153,7 @@ function render() {
   view = null;
   if (s.phase === "none") {
     app.innerHTML = `${topBar()}<div class="center"><img src="sr-logo.png" style="width:18vh;border-radius:50%" alt=""><h1 style="font-size:7vh">${esc(s.title).replace(/Quiz$/, "<em>Quiz</em>")}</h1>
-      <p style="color:var(--lav2);font-size:2.6vh;margin:0">${12} questions · players join by scanning a QR code</p>
+      <p style="color:var(--lav2);font-size:2.6vh;margin:0">10 questions · players join by scanning a QR code</p>
       <button class="btn main" onclick="act('open')">Open the game ▶</button></div>${foot}`;
     return;
   }
