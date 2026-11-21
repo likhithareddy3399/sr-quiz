@@ -3,95 +3,253 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>SR Exam Pro · Join the Quiz</title>
+<title>SR Exam Pro · Host</title>
 <link rel="icon" href="sr-logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,600;0,9..144,800;1,9..144,600&family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,600;0,9..144,800;1,9..144,600&family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 <style>
-  :root { --ink:#1e1a4d; --indigo2:#3b347a; --lav:#b4a8f6; --lav2:#d9d2ff; --line:rgba(255,255,255,.16); }
+  :root { --ink:#1e1a4d; --indigo2:#3b347a; --lav:#b4a8f6; --lav2:#d9d2ff; --line:rgba(255,255,255,.16); --ok:#22c55e; }
   * { box-sizing: border-box; }
   html, body { margin:0; height:100%; }
   body { font-family: Inter, system-ui, sans-serif; color:#fff; overflow:hidden;
          background: radial-gradient(1400px 700px at 30% -10%, #4b4396 0%, transparent 60%), linear-gradient(180deg, var(--indigo2), var(--ink)); }
-  .wrap { height:100vh; display:grid; grid-template-columns: minmax(380px, 42%) 1fr; gap: 4vw; padding: 3.5vh 4vw; }
-  .left { display:flex; flex-direction:column; align-items:center; justify-content:center; gap: 2.2vh; text-align:center; }
-  .brandrow { display:flex; align-items:center; gap:14px; }
-  .brandrow img { width: 7vh; height:7vh; border-radius:50%; box-shadow:0 0 0 4px rgba(255,255,255,.15); }
-  .brandrow .t { text-align:left; line-height:1.05; }
-  .brandrow b { font-family: Fraunces, Georgia, serif; font-weight:800; font-size: 4.4vh; }
-  .brandrow small { display:block; font-size:1.5vh; letter-spacing:.16em; text-transform:uppercase; color:var(--lav2); }
-  h1 { font-family: Fraunces, Georgia, serif; font-weight:800; font-size: 6vh; margin:0; line-height:1.05; }
+  button { font: inherit; cursor:pointer; border:0; }
+  .app { height:100vh; display:flex; flex-direction:column; padding: 2.4vh 3vw; gap: 2vh; }
+  .top { display:flex; align-items:center; gap: 14px; }
+  .top img { width: 6vh; height: 6vh; border-radius:50%; box-shadow:0 0 0 3px rgba(255,255,255,.15); }
+  .top .t { line-height:1.05; }
+  .top b { font-family: Fraunces, Georgia, serif; font-weight:800; font-size: 3.4vh; }
+  .top small { display:block; font-size:1.3vh; letter-spacing:.16em; text-transform:uppercase; color:var(--lav2); }
+  .top .mid { flex:1; text-align:center; font-weight:800; font-size: 2.4vh; color: var(--lav2); }
+  .pill { background: rgba(255,255,255,.1); border:1px solid var(--line); padding: 8px 16px; border-radius:999px; font-weight:800; font-size: 2.1vh; white-space:nowrap; }
+  .stage { flex:1; min-height:0; display:flex; flex-direction:column; }
+  .bar { display:flex; gap: 12px; justify-content:center; align-items:center; }
+  .btn { padding: 1.6vh 2.6vw; border-radius: 18px; font-weight:900; font-size: 2.4vh; background: rgba(255,255,255,.14); color:#fff; border:1px solid var(--line); }
+  .btn.main { background: var(--lav); color: var(--ink); box-shadow: 0 5px 0 #7d6fd6; border:0; font-size: 2.8vh; padding: 1.8vh 3.4vw; }
+  .btn:disabled { opacity:.5; }
+  h1 { font-family: Fraunces, Georgia, serif; font-weight:800; margin:0; line-height:1.1; }
   h1 em { font-style: italic; font-weight:600; color: var(--lav); }
-  .qr { background:#fff; padding: 2vh; border-radius: 28px; box-shadow: 0 20px 60px rgba(0,0,0,.35); }
-  .qr img { display:block; width: min(44vh, 32vw); height:auto; }
-  .url { font-size: 2.2vh; color: var(--lav2); }
-  .url b { color:#fff; }
-  .steps { display:flex; gap: 1.6vw; font-size: 2vh; font-weight:700; color:var(--lav2); }
-  .steps span { background: rgba(255,255,255,.08); border:1px solid var(--line); padding: 8px 14px; border-radius: 999px; }
-  .right { display:flex; flex-direction:column; min-height:0; }
-  .count { display:flex; align-items:baseline; gap: 14px; margin-top: 1vh; }
-  .count .n { font-family: Fraunces, Georgia, serif; font-size: 14vh; font-weight:800; line-height:1; }
-  .count .l { font-size: 3vh; font-weight:700; color: var(--lav2); }
-  .status { font-size: 2.4vh; font-weight:700; margin: .5vh 0 2vh; color: var(--lav); }
-  .names { flex:1; min-height:0; overflow:hidden; display:flex; flex-wrap:wrap; align-content:flex-start; gap: 10px; }
-  .chip { background: rgba(255,255,255,.12); border:1px solid var(--line); border-radius: 999px; padding: 8px 16px; font-size: 2.2vh; font-weight:700; animation: pop .35s ease-out; }
-  .chip.new { background: var(--lav); color: var(--ink); }
+  .center { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap: 2.4vh; text-align:center; }
+  /* lobby */
+  .lobby { flex:1; min-height:0; display:grid; grid-template-columns: minmax(340px, 40%) 1fr; gap: 3vw; }
+  .lobby .l { display:flex; flex-direction:column; align-items:center; justify-content:center; gap: 2vh; text-align:center; }
+  .qr { background:#fff; padding: 1.8vh; border-radius: 26px; box-shadow: 0 20px 60px rgba(0,0,0,.35); }
+  .qr img { display:block; width: min(42vh, 30vw); }
+  .steps { display:flex; gap: 1vw; font-size: 1.9vh; font-weight:700; color:var(--lav2); flex-wrap:wrap; justify-content:center; }
+  .steps span { background: rgba(255,255,255,.08); border:1px solid var(--line); padding: 7px 13px; border-radius: 999px; }
+  .lobby .r { display:flex; flex-direction:column; min-height:0; }
+  .count .n { font-family: Fraunces, Georgia, serif; font-size: 12vh; font-weight:800; line-height:1; }
+  .count .l2 { font-size: 2.8vh; font-weight:700; color: var(--lav2); }
+  .names { flex:1; min-height:0; overflow:hidden; display:flex; flex-wrap:wrap; align-content:flex-start; gap: 10px; margin-top: 1.5vh; }
+  .chip { background: rgba(255,255,255,.12); border:1px solid var(--line); border-radius: 999px; padding: 7px 15px; font-size: 2vh; font-weight:700; animation: pop .35s ease-out; }
   @keyframes pop { from { transform: scale(.6); opacity:0; } to { transform: scale(1); opacity:1; } }
-  .foot { margin-top: 2vh; font-size: 1.5vh; letter-spacing:.14em; color: var(--lav2); opacity:.8; }
-  .wait { font-size: 2.6vh; color: var(--lav2); }
-  @media (max-width: 800px) { body { overflow:auto; } .wrap { grid-template-columns: 1fr; height:auto; } .qr img { width: 70vw; } }
+  /* countdown */
+  .cd { font-family: Fraunces, Georgia, serif; font-size: 34vh; font-weight:800; line-height:1; animation: zoom .9s ease-out; text-shadow: 0 10px 40px rgba(0,0,0,.35); }
+  @keyframes zoom { from { transform: scale(1.8); opacity: 0; } 30% { opacity:1; } to { transform: scale(1); opacity:1; } }
+  /* question */
+  .qrow { display:flex; align-items:flex-start; gap: 2vw; }
+  .stem { flex:1; background: rgba(255,255,255,.1); border:1px solid var(--line); border-radius: 26px; padding: 3vh 2.4vw; font-size: 4.6vh; font-weight:800; line-height:1.25; }
+  .timer { flex:none; width: 17vh; height: 17vh; border-radius:50%; display:flex; align-items:center; justify-content:center; font-family: Fraunces, Georgia, serif; font-size: 7vh; font-weight:800;
+           background: conic-gradient(var(--lav) var(--p, 100%), rgba(255,255,255,.12) 0); position:relative; }
+  .timer::after { content:""; position:absolute; inset: 1.4vh; border-radius:50%; background: var(--indigo2); z-index:0; }
+  .timer span { position:relative; z-index:1; }
+  .timer.low { background: conic-gradient(#f43f5e var(--p, 100%), rgba(255,255,255,.12) 0); }
+  .opts { display:grid; grid-template-columns: 1fr 1fr; gap: 1.6vh 1.4vw; margin-top: 2.4vh; }
+  .opt { position:relative; display:flex; align-items:center; gap: 1.2vw; padding: 2.2vh 1.6vw; border-radius: 20px; font-size: 3.2vh; font-weight:800; min-height: 11vh; overflow:hidden; }
+  .opt .l { flex:none; width: 6vh; height: 6vh; border-radius: 14px; background: rgba(255,255,255,.25); display:flex; align-items:center; justify-content:center; font-weight:900; }
+  .opt .fill { position:absolute; inset:0; background: rgba(255,255,255,.18); transform-origin: left; transform: scaleX(var(--w, 0)); transition: transform .6s ease; }
+  .opt .tx { position:relative; flex:1; }
+  .opt .ct { position:relative; font-family: Fraunces, Georgia, serif; font-size: 4vh; font-weight:800; }
+  .o0 { background:#e11d48; } .o1 { background:#2563eb; } .o2 { background:#d97706; } .o3 { background:#16a34a; }
+  .opt.dim { opacity:.32; } .opt.right { outline: 6px solid #fff; box-shadow: 0 0 0 10px rgba(255,255,255,.18); }
+  .info { display:flex; justify-content:space-between; align-items:center; margin-top: 2vh; gap: 2vw; }
+  .info .big { font-size: 3vh; font-weight:800; }
+  .expl { margin-top: 1.6vh; font-size: 2.6vh; color: var(--lav2); text-align:center; }
+  /* leaderboard + podium */
+  .board { width: min(1000px, 90%); margin: 0 auto; display:flex; flex-direction:column; gap: 1.1vh; }
+  .row { display:flex; align-items:center; gap: 1.4vw; background: rgba(255,255,255,.1); border:1px solid var(--line); border-radius: 16px; padding: 1.2vh 1.6vw; font-size: 2.8vh; font-weight:800; animation: pop .4s ease-out both; }
+  .row .rk { width: 5vh; text-align:center; font-family: Fraunces, Georgia, serif; }
+  .row .nm { flex:1; }
+  .row .pt { font-family: Fraunces, Georgia, serif; }
+  .row .up { color:#86efac; font-size: 2vh; } .row .dn { color:#fda4af; font-size: 2vh; }
+  .podium { display:flex; align-items:flex-end; justify-content:center; gap: 2vw; margin-top: 2vh; }
+  .pod { width: 22vw; max-width: 320px; text-align:center; }
+  .pod .who { font-size: 2.8vh; font-weight:800; margin-bottom: 1vh; }
+  .pod .av { font-size: 7vh; }
+  .pod .blk { border-radius: 18px 18px 0 0; display:flex; flex-direction:column; align-items:center; justify-content:flex-start; padding-top: 1.6vh; font-family: Fraunces, Georgia, serif; font-weight:800; font-size: 6vh; }
+  .p1 .blk { height: 30vh; background: linear-gradient(#facc15,#ca8a04); color: var(--ink); }
+  .p2 .blk { height: 22vh; background: linear-gradient(#e5e7eb,#9ca3af); color: var(--ink); }
+  .p3 .blk { height: 16vh; background: linear-gradient(#fdba74,#c2410c); color: var(--ink); }
+  .pod .blk small { font-family: Inter, sans-serif; font-size: 2.2vh; font-weight:800; }
+  .pin { width: 280px; font: 900 34px Inter, sans-serif; text-align:center; letter-spacing:.3em; padding: 14px; border-radius:18px; border:0; color: var(--ink); }
+  .err { background: rgba(225,29,72,.92); padding:10px 16px; border-radius:14px; font-weight:800; }
+  .foot { text-align:center; font-size: 1.4vh; letter-spacing:.14em; color: var(--lav2); opacity:.7; }
+  .confetti { position:fixed; inset:0; pointer-events:none; overflow:hidden; }
+  .confetti i { position:absolute; top:-5vh; width:10px; height:16px; opacity:.9; animation: fall linear forwards; }
+  @keyframes fall { to { transform: translateY(115vh) rotate(720deg); } }
 </style>
 </head>
 <body>
-<div class="wrap">
-  <section class="left">
-    <div class="brandrow"><img src="sr-logo.png" alt="SR"><div class="t"><b>SR Exam Pro</b><small>by SR Edu Technologies</small></div></div>
-    <h1 id="title">SR Exam Pro <em>Live Quiz</em></h1>
-    <div class="qr"><img src="qr.png" alt="QR code to join"></div>
-    <div class="steps"><span>① Scan</span><span>② Find or type your name</span><span>③ Play!</span></div>
-    <div class="url">or open <b>likhithareddy3399.github.io/sr-quiz</b></div>
-  </section>
-  <section class="right">
-    <div class="count"><span class="n" id="n">0</span><span class="l">players joined</span></div>
-    <div class="status" id="status">Connecting…</div>
-    <div class="names" id="names"></div>
-    <div class="foot">SR EDU TECHNOLOGIES PVT. LTD. · INNOVATE · EDUCATE · ELEVATE</div>
-  </section>
-</div>
+<div class="app" id="app"></div>
 <script>
 const API = "https://dewmtikofokfugcidxqa.supabase.co/functions/v1/sr-quiz";
-const CODE = new URLSearchParams(location.search).get("code") || "";
+const JOIN_URL = "likhithareddy3399.github.io/sr-quiz";
+const app = document.getElementById("app");
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c]));
-const seen = new Set();
-let first = true;
-async function poll() {
+let pin = ""; try { pin = localStorage.getItem("srq-host-pin") || ""; } catch {}
+let st = null, skew = 0, view = null, showBoard = false, closedFor = -1, busy = false, poller = null, ticker = null, sig = "";
+
+const top = () => `<div class="top"><img src="sr-logo.png" alt="SR"><div class="t"><b>SR Exam Pro</b><small>by SR Edu Technologies</small></div>
+  <div class="mid">${esc(st?.title || "Live Quiz")}</div>${st && st.phase !== "none" ? `<span class="pill">👥 ${st.count}</span>` : ""}</div>`;
+const foot = `<div class="foot">SR EDU TECHNOLOGIES PVT. LTD. · INNOVATE · EDUCATE · ELEVATE</div>`;
+
+async function act(action, extra) {
+  if (busy) return; busy = true;
   try {
-    const r = await fetch(`${API}/lobby${CODE ? "?code=" + CODE : ""}`, { cache: "no-store" }).then((r) => r.json());
-    const status = document.getElementById("status");
-    if (!r.open) {
-      status.textContent = "Open the quiz in SR Exam Pro (Live quizzes → Host) to let people join.";
-      document.getElementById("n").textContent = "0";
-      document.getElementById("names").innerHTML = "";
-      seen.clear();
-      return;
-    }
-    document.getElementById("title").innerHTML = esc(r.title).replace(/Quiz$/, "<em>Quiz</em>");
-    document.getElementById("n").textContent = r.count;
-    status.textContent = r.status === "lobby" ? "Waiting for everyone… the quiz will start soon"
-      : r.status === "ended" ? "Quiz finished. Thank you for playing!"
-      : `Quiz in progress · Question ${r.index + 1} of ${r.total} · late joiners welcome`;
-    const box = document.getElementById("names");
-    const html = r.players.map((p) => {
-      const isNew = !first && !seen.has(p.display_name);
-      seen.add(p.display_name);
-      return `<span class="chip${isNew ? " new" : ""}">${esc(p.avatar)} ${esc(p.display_name)}</span>`;
-    }).join("");
-    box.innerHTML = html;
-    first = false;
-  } catch { document.getElementById("status").textContent = "Reconnecting…"; }
+    const r = await fetch(API + "/host", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ pin, action, ...(extra || {}) }) }).then((r) => r.json());
+    if (r.error) alert(r.error);
+  } catch { alert("No connection. Try again."); }
+  busy = false; await poll(true);
 }
-poll(); setInterval(poll, 2000);
+
+function pinScreen(msg) {
+  stop();
+  app.innerHTML = `${top()}<div class="center"><img src="sr-logo.png" style="width:16vh;border-radius:50%" alt=""><h1 style="font-size:6vh">Host the <em>live quiz</em></h1>
+    <p style="color:var(--lav2);font-size:2.4vh;margin:0">Enter your host PIN</p>
+    <input class="pin" id="pin" inputmode="numeric" maxlength="6" autocomplete="off">
+    <button class="btn main" id="go">Continue ▶</button>${msg ? `<div class="err">${esc(msg)}</div>` : ""}</div>${foot}`;
+  const i = document.getElementById("pin"); i.focus();
+  i.addEventListener("keydown", (e) => { if (e.key === "Enter") document.getElementById("go").click(); });
+  document.getElementById("go").onclick = async () => {
+    pin = i.value.trim();
+    const r = await fetch(API + "/host", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ pin, action: "check" }) }).then((r) => r.json()).catch(() => ({ error: "No connection." }));
+    if (r.error) return pinScreen(r.error);
+    try { localStorage.setItem("srq-host-pin", pin); } catch {}
+    start();
+  };
+}
+
+async function poll(force) {
+  try {
+    const t0 = Date.now();
+    const res = await fetch(`${API}/hoststate?pin=${encodeURIComponent(pin)}`, { cache: "no-store" });
+    if (res.status === 401) { try { localStorage.removeItem("srq-host-pin"); } catch {} return pinScreen("Enter your host PIN"); }
+    const next = await res.json();
+    skew = new Date(next.serverNow).getTime() - (t0 + Date.now()) / 2;
+    const key = JSON.stringify([next.phase, next.index, next.answerShown, next.paused, next.status, next.count, next.answered, next.startedAt, next.limitMs,
+      next.phase === "lobby" ? next.players?.length : 0, next.phase === "review" ? next.question?.options?.map((o) => o.count) : 0]);
+    if (next.phase !== st?.phase || next.index !== st?.index) showBoard = false;
+    st = next;
+    if (force || key !== sig) { sig = key; render(); }
+  } catch { /* retry next tick */ }
+}
+function start() { stop(); poll(true); poller = setInterval(poll, 1000); ticker = setInterval(tick, 200); }
+function stop() { clearInterval(poller); clearInterval(ticker); poller = ticker = null; }
+const now = () => Date.now() + skew;
+
+function render() {
+  const s = st; if (!s) return;
+  view = null;
+  if (s.phase === "none") {
+    app.innerHTML = `${top()}<div class="center"><img src="sr-logo.png" style="width:18vh;border-radius:50%" alt=""><h1 style="font-size:7vh">${esc(s.title).replace(/Quiz$/, "<em>Quiz</em>")}</h1>
+      <p style="color:var(--lav2);font-size:2.6vh;margin:0">${12} questions · players join by scanning a QR code</p>
+      <button class="btn main" onclick="act('open')">Open the game ▶</button></div>${foot}`;
+    return;
+  }
+  if (s.phase === "lobby") {
+    app.innerHTML = `${top()}<div class="lobby"><section class="l"><h1 style="font-size:5.4vh">Scan to <em>join!</em></h1>
+      <div class="qr"><img src="qr.png" alt="QR code"></div>
+      <div class="steps"><span>① Scan</span><span>② Find or type your name</span><span>③ Play!</span></div>
+      <div style="color:var(--lav2);font-size:2vh">or open <b style="color:#fff">${JOIN_URL}</b></div></section>
+      <section class="r"><div class="count"><span class="n">${s.count}</span> <span class="l2">players joined</span></div>
+      <div class="names">${s.players.map((p) => `<span class="chip">${esc(p.avatar)} ${esc(p.name)}</span>`).join("")}</div>
+      <div class="bar" style="margin-top:2vh"><button class="btn" onclick="if(confirm('Close this lobby and open a new one?'))act('open')">↺ New lobby</button>
+      <button class="btn main" ${s.count ? "" : "disabled"} onclick="act('start')">Start quiz ▶</button></div></section></div>${foot}`;
+    return;
+  }
+  if (s.phase === "ended") {
+    const b = s.board || [];
+    const pod = (p, cls, n) => p ? `<div class="pod ${cls}"><div class="av">${esc(p.avatar)}</div><div class="who">${esc(p.name)}</div><div class="blk">${n}<small>${p.points} pts</small></div></div>` : "";
+    app.innerHTML = `${top()}<div class="center" style="justify-content:flex-start"><h1 style="font-size:6vh">🏆 <em>Winners</em></h1>
+      <div class="podium">${pod(b[1], "p2", 2)}${pod(b[0], "p1", 1)}${pod(b[2], "p3", 3)}</div>
+      <div class="board" style="margin-top:2vh">${b.slice(3, 10).map((p, i) => `<div class="row" style="animation-delay:${i * 80}ms"><span class="rk">${p.rank}</span><span>${esc(p.avatar)}</span><span class="nm">${esc(p.name)}</span><span class="pt">${p.points}</span></div>`).join("")}</div>
+      <div class="bar"><button class="btn" onclick="if(confirm('Open a new game? Everyone will need to join again.'))act('open')">Open a new game</button></div></div>${foot}`;
+    confetti();
+    return;
+  }
+  // a question is on
+  const q = s.question;
+  const header = `<div class="bar" style="justify-content:space-between"><span class="pill">Question ${s.index + 1} of ${s.total}</span>${s.paused ? `<span class="pill">⏸ Paused</span>` : ""}<span class="pill">Code ${esc(s.code)}</span></div>`;
+  if (s.phase === "question") {
+    if (now() < new Date(s.startedAt).getTime()) { view = "countdown"; app.innerHTML = `${top()}<div class="center"><div class="pill" style="font-size:3vh">Question ${s.index + 1} of ${s.total}</div><div class="cd" id="cd">3</div><div style="font-size:3vh;color:var(--lav2);font-weight:700">Get ready…</div></div>${foot}`; tick(); return; }
+    view = "question";
+    app.innerHTML = `${top()}<div class="stage">${header}
+      <div class="qrow" style="margin-top:2vh"><div class="stem">${esc(q.stem)}</div><div class="timer" id="tm"><span id="tv">--</span></div></div>
+      <div class="opts">${q.options.map((o, i) => `<div class="opt o${i % 4}"><span class="l">${"ABCD"[i]}</span><span class="tx">${esc(o.text)}</span></div>`).join("")}</div>
+      <div class="info"><span class="big">✋ ${s.answered} of ${s.count} answered</span>
+      <span class="bar"><button class="btn" onclick="act('extend')">+10 sec</button><button class="btn" onclick="act('${s.paused ? "resume" : "pause"}')">${s.paused ? "▶ Resume" : "⏸ Pause"}</button><button class="btn main" onclick="act('reveal')">Close now ⏹</button></span></div></div>${foot}`;
+    tick();
+    return;
+  }
+  // review
+  if (showBoard) {
+    app.innerHTML = `${top()}<div class="stage">${header}<h1 style="font-size:5.4vh;text-align:center;margin:2vh 0">🏅 <em>Leaderboard</em></h1>
+      <div class="board">${(s.board || []).map((p, i) => {
+        const mv = p.prev ? p.prev - p.rank : 0;
+        return `<div class="row" style="animation-delay:${i * 70}ms"><span class="rk">${p.rank}</span><span>${esc(p.avatar)}</span><span class="nm">${esc(p.name)} ${mv > 0 ? `<span class="up">▲${mv}</span>` : mv < 0 ? `<span class="dn">▼${-mv}</span>` : ""}</span><span class="pt">${p.points}</span></div>`;
+      }).join("")}</div>
+      <div class="bar" style="margin-top:2.4vh"><button class="btn" onclick="showBoard=false;render()">◀ Back</button><button class="btn main" onclick="act('next',{index:${s.index}})">${s.last ? "Finish quiz 🏁" : "Next question ▶"}</button></div></div>${foot}`;
+    return;
+  }
+  const total = Math.max(1, s.answered);
+  const shown = s.answerShown;
+  app.innerHTML = `${top()}<div class="stage">${header}
+    <div class="qrow" style="margin-top:2vh"><div class="stem">${esc(q.stem)}</div></div>
+    <div class="opts">${q.options.map((o, i) => {
+      const right = shown && s.correct && s.correct.includes(o.id);
+      return `<div class="opt o${i % 4} ${shown ? (right ? "right" : "dim") : ""}" style="--w:${o.count / total}"><span class="fill"></span><span class="l">${right ? "✓" : "ABCD"[i]}</span><span class="tx">${esc(o.text)}</span><span class="ct">${o.count}</span></div>`;
+    }).join("")}</div>
+    ${shown && s.explanation ? `<div class="expl">${esc(s.explanation)}</div>` : ""}
+    <div class="info"><span class="big">${shown ? `🎉 ${s.rightCount} of ${s.answered} got it right` : `⏰ Time's up! ${s.answered} of ${s.count} answered`}</span>
+      <span class="bar">${shown
+        ? `<button class="btn" onclick="showBoard=true;render()">🏅 Leaderboard</button><button class="btn main" onclick="act('next',{index:${s.index}})">${s.last ? "Finish quiz 🏁" : "Next question ▶"}</button>`
+        : `<button class="btn main" onclick="act('show')">Show correct answer ✓</button>`}</span></div></div>${foot}`;
+}
+
+function tick() {
+  const s = st; if (!s || s.phase !== "question") return;
+  const startAt = new Date(s.startedAt).getTime();
+  if (view === "countdown") {
+    const left = Math.ceil((startAt - now()) / 1000);
+    if (left <= 0) return render();
+    const el = document.getElementById("cd");
+    if (el && el.textContent !== String(left)) { el.textContent = left; el.style.animation = "none"; void el.offsetWidth; el.style.animation = ""; }
+    return;
+  }
+  if (view !== "question") return;
+  const leftMs = startAt + s.limitMs - now();
+  const tv = document.getElementById("tv"), tm = document.getElementById("tm");
+  if (tv) tv.textContent = s.paused ? "⏸" : Math.max(0, Math.ceil(leftMs / 1000));
+  if (tm) { tm.style.setProperty("--p", `${Math.max(0, Math.min(100, (leftMs / s.limitMs) * 100))}%`); tm.classList.toggle("low", leftMs < 10000); }
+  // time's up: close the question once (the app's host screen does the same)
+  if (!s.paused && leftMs <= -500 && closedFor !== s.index) { closedFor = s.index; act("reveal"); }
+}
+
+function confetti() {
+  if (document.querySelector(".confetti")) return;
+  const box = document.createElement("div"); box.className = "confetti";
+  const colors = ["#facc15", "#b4a8f6", "#f472b6", "#60a5fa", "#34d399", "#fff"];
+  for (let i = 0; i < 120; i++) {
+    const p = document.createElement("i");
+    p.style.left = Math.random() * 100 + "vw"; p.style.background = colors[i % colors.length];
+    p.style.animationDuration = 2.5 + Math.random() * 2.5 + "s"; p.style.animationDelay = Math.random() * 1.5 + "s";
+    box.appendChild(p);
+  }
+  document.body.appendChild(box); setTimeout(() => box.remove(), 7000);
+}
+
+if (pin) start(); else pinScreen();
 </script>
 </body>
 </html>

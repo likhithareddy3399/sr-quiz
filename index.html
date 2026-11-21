@@ -51,6 +51,8 @@
   .muted { color:var(--lav2); text-align:center; }
   .avatar { font-size:60px; text-align:center; }
   ol { margin:0; padding-left:22px; font-size:18px; font-weight:700; } ol li { margin:6px 0; }
+  .cd { font-family: Fraunces, Georgia, serif; font-size: 140px; font-weight:800; text-align:center; line-height:1; animation: zoom .9s ease-out; }
+  @keyframes zoom { from { transform: scale(1.8); opacity:0; } 30% { opacity:1; } to { transform: scale(1); } }
   .spin { width:44px; height:44px; border-radius:50%; border:5px solid rgba(255,255,255,.25); border-top-color:var(--lav); animation: s 1s linear infinite; margin: 0 auto; }
   @keyframes s { to { transform: rotate(360deg); } }
   footer { margin-top:22px; text-align:center; font-size:11px; letter-spacing:.08em; color:var(--lav2); opacity:.75; }
@@ -66,12 +68,12 @@ const KEY = "srq-player" + (CODE ? "-" + CODE : "");
 const POLL_MS = 2500;
 const app = document.getElementById("app");
 let me = null; try { me = JSON.parse(localStorage.getItem(KEY) || "null"); } catch {}
-let st = null, skew = 0, timer = null, poller = null, busy = false, names = [];
+let st = null, skew = 0, timer = null, poller = null, busy = false, names = [], view = null;
 
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c]));
 const fold = (s) => String(s).toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
 const save = () => { try { localStorage.setItem(KEY, JSON.stringify(me)); } catch {} };
-const header = () => `<header><img src="sr-logo.png" alt="SR"><div class="brand"><b>SR Exam Pro</b><small>by SR Edu Technologies</small></div>${me ? `<span class="me">${esc(me.avatar || "")} ${esc(me.name)}<br>${st ? (st.points || 0) + " pts" : ""}</span>` : ""}</header>`;
+const header = () => `<header><img src="sr-logo.png" alt="SR"><div class="brand"><b>SR Exam Pro</b><small>by SR Edu Technologies</small></div>${me ? `<span class="me">${esc(me.avatar || "")} ${esc(me.name)}<br>${st && st.phase !== "closed" ? (st.points || 0) + " pts" : ""}</span>` : ""}</header>`;
 const footer = `<footer><b>SR EDU TECHNOLOGIES PVT. LTD.</b>INNOVATE · EDUCATE · ELEVATE</footer>`;
 
 async function loadNames() {
@@ -154,7 +156,19 @@ function render() {
     return;
   }
   if (s.phase === "unsupported" || s.phase === "wait") { app.innerHTML = `${header()}<div class="center"><h1>Get <em>ready…</em></h1><div class="spin"></div></div>${footer}`; return; }
+  if (s.phase === "closed") {
+    app.innerHTML = `${header()}<div class="center"><div class="avatar">⏰</div><h1>Time's <em>up!</em></h1>
+      <p class="sub">${s.answered ? "Your answer is in." : "No answer this time."} Look at the screen for the correct answer…</p><div class="spin"></div></div>${footer}`;
+    return;
+  }
   const q = s.question;
+  if (s.phase === "question" && s.startedAt && Date.now() + skew < new Date(s.startedAt).getTime()) {
+    view = "countdown";
+    app.innerHTML = `${header()}<div class="center"><p class="sub">Question ${s.index + 1} of ${s.total}</p><div class="cd" id="cd">3</div><h1>Get <em>ready…</em></h1></div>${footer}`;
+    tick(); timer = setInterval(tick, 150);
+    return;
+  }
+  view = s.phase;
   const head = `<div class="qhead"><span>Question ${s.index + 1} of ${s.total}</span>${s.phase === "question" ? `<span class="timer" id="t">--</span>` : ""}</div>`;
   if (s.phase === "question") {
     const answered = s.answered;
@@ -178,6 +192,13 @@ function render() {
 }
 
 function tick() {
+  if (view === "countdown") {
+    const left = Math.ceil((new Date(st.startedAt).getTime() - (Date.now() + skew)) / 1000);
+    if (left <= 0) return render();
+    const c = document.getElementById("cd");
+    if (c && c.textContent !== String(left)) { c.textContent = left; c.style.animation = "none"; void c.offsetWidth; c.style.animation = ""; }
+    return;
+  }
   const el = document.getElementById("t");
   if (!el || !st || st.phase !== "question" || !st.startedAt) return;
   const left = Math.max(0, Math.ceil((new Date(st.startedAt).getTime() + st.limitMs - (Date.now() + skew)) / 1000));
