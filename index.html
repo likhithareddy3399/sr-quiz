@@ -86,7 +86,7 @@ async function loadNames() {
 }
 
 function showJoin(msg) {
-  stopPoll();
+  stopPoll(); st = null; app.setAttribute("data-view", "join");
   app.innerHTML = `${header()}<div class="center">
     <img class="logo-big" src="sr-logo.png" alt="">
     <h1>Join the <em>live quiz</em></h1>
@@ -131,7 +131,7 @@ async function refresh() {
     if (next && next.error === "gone") { me = null; try { localStorage.removeItem(KEY); } catch (e) {} await loadNames(); return showJoin("That game has finished. Join the new one."); }
     if (!next || !next.serverNow) return; // server busy or a hiccup: keep the screen, retry on the next poll
     skew = new Date(next.serverNow).getTime() - (t0 + Date.now()) / 2;
-    const changed = !st || st.phase !== next.phase || st.index !== next.index || st.answered !== next.answered || st.paused !== next.paused || st.players !== next.players;
+    const changed = app.getAttribute("data-view") !== "game" || !st || st.phase !== next.phase || st.index !== next.index || st.answered !== next.answered || st.paused !== next.paused || st.players !== next.players;
     st = next;
     if (changed) render();
   } catch (e) { /* keep the current screen; next poll retries */ }
@@ -141,6 +141,7 @@ function startPoll() { stopPoll(); refresh(); poller = setInterval(refresh, POLL
 function stopPoll() { if (poller) clearInterval(poller); poller = null; if (timer) clearInterval(timer); timer = null; }
 
 function render() {
+  app.setAttribute("data-view", "game");
   if (timer) { clearInterval(timer); timer = null; }
   const s = st;
   if (!s) return;
