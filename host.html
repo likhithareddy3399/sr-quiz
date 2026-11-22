@@ -83,6 +83,13 @@
   .lbr .pt { min-width: 9vw; text-align:right; font-size: 3.6vh; }
   .ini { display:inline-flex; align-items:center; justify-content:center; flex:none; width:1.9em; height:1.9em; border-radius:50%; background: linear-gradient(135deg,#b4a8f6,#7d6fd6); color:#1e1a4d; font-weight:900; font-size:.8em; letter-spacing:.02em; vertical-align:middle; margin-right:.4em; }
   .pod .ini { width:2.2em; height:2.2em; font-size: 3.2vh; margin: 0 auto 1vh; display:flex; }
+  .wifi { display:flex; align-items:center; gap: 1.4vw; background: rgba(255,255,255,.1); border:1px solid var(--line); border-radius: 22px; padding: 1.4vh 1.4vw; text-align:left; }
+  .wifi img { width: 15vh; height: 15vh; background:#fff; padding: .8vh; border-radius: 12px; }
+  .wifi .k { font-size: 1.8vh; letter-spacing:.12em; text-transform:uppercase; color: var(--lav2); font-weight:800; }
+  .wifi .v { font-size: 3.4vh; font-weight:900; line-height:1.15; }
+  .wifi .v b { font-family: ui-monospace, Menlo, Consolas, monospace; letter-spacing:.04em; }
+  .step { font-size: 2.2vh; font-weight:900; color: var(--lav); letter-spacing:.06em; text-transform:uppercase; }
+  .lobby .qr img { width: min(32vh, 24vw); }
   .podium { display:flex; align-items:flex-end; justify-content:center; gap: 2vw; margin-top: 2vh; }
   .pod { width: 22vw; max-width: 320px; text-align:center; }
   .pod .who { font-size: 3.4vh; font-weight:800; margin-bottom: 1vh; }
@@ -171,11 +178,19 @@ function render() {
   if (s.phase === "none") {
     app.innerHTML = `${topBar()}<div class="center"><img src="sr-logo.png" style="width:18vh;border-radius:50%" alt=""><h1 style="font-size:7vh">${esc(s.title).replace(/Quiz$/, "<em>Quiz</em>")}</h1>
       <p style="color:var(--lav2);font-size:2.6vh;margin:0">${s.total} questions · ${s.seconds || 20} seconds each · players join by scanning a QR code</p>
+      <div style="width:min(620px,90%)"><div class="wifi"><img src="wifi-qr.png" alt="Wi-Fi QR code"><div><div class="step">Step 1 · Connect to Wi-Fi</div>
+        <div class="k" style="margin-top:.6vh">Wi-Fi name</div><div class="v"><b>CSRB</b></div>
+        <div class="k">Password</div><div class="v"><b>csrb2023</b></div>
+        <div style="font-size:1.6vh;color:var(--lav2);margin-top:.4vh">Scan this small code to connect automatically</div></div></div></div>
       <button class="btn main" onclick="act('open')">Open the game ▶</button></div>${foot}`;
     return;
   }
   if (s.phase === "lobby") {
-    app.innerHTML = `${topBar()}<div class="lobby"><section class="l"><h1 style="font-size:5.4vh">Scan to <em>join!</em></h1>
+    app.innerHTML = `${topBar()}<div class="lobby"><section class="l"><div class="wifi"><img src="wifi-qr.png" alt="Wi-Fi QR code"><div><div class="step">Step 1 · Connect to Wi-Fi</div>
+        <div class="k" style="margin-top:.6vh">Wi-Fi name</div><div class="v"><b>CSRB</b></div>
+        <div class="k">Password</div><div class="v"><b>csrb2023</b></div>
+        <div style="font-size:1.6vh;color:var(--lav2);margin-top:.4vh">Scan this small code to connect automatically</div></div></div>
+      <div class="step">Step 2 · Scan to join the quiz</div>
       <div class="qr"><img src="qr.png" alt="QR code"></div>
       <div class="steps"><span>① Scan</span><span>② Find or type your name</span><span>③ Play!</span></div>
       <div style="color:var(--lav2);font-size:2.2vh;font-weight:700">SR Edu Technologies invites you to play!</div></section>
