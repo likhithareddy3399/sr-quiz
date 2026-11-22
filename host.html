@@ -110,7 +110,6 @@
 <body>
 <div class="app" id="app"></div>
 <script>
-const API = "https://dewmtikofokfugcidxqa.supabase.co/functions/v1/sr-quiz";
 const RPC = "https://dewmtikofokfugcidxqa.supabase.co/rest/v1/rpc/";
 const ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRld210aWtvZm9rZnVnY2lkeHFhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE1MzIyNjUsImV4cCI6MjEwNzEwODI2NX0.VR9M_NO68ES6Aqhutmp7L3HXxcM2_uFIEOMCwimJqe0"; // public (anon) key
 const rpc = (fn, args) => fetch(RPC + fn, { method: "POST", cache: "no-store", headers: { "content-type": "application/json", apikey: ANON, authorization: "Bearer " + ANON }, body: JSON.stringify(args) }).then((r) => r.json());
@@ -122,7 +121,7 @@ const initials = (name) => {
 };
 const ini = (name, cls) => `<span class="ini${cls ? " " + cls : ""}">${esc(initials(name))}</span>`;
 let pin = ""; try { pin = localStorage.getItem("srq-host-pin") || ""; } catch {}
-let st = null, skew = 0, view = null, showBoard = false, closedFor = -1, busy = false, poller = null, ticker = null, sig = "";
+let lastOk = 0, st = null, skew = 0, view = null, showBoard = false, closedFor = -1, busy = false, poller = null, ticker = null, sig = "";
 
 const topBar = () => `<div class="top"><img src="sr-logo.png" alt="SR"><div class="t"><b>SR Exam Pro</b><small>by SR Edu Technologies</small></div>
   <div class="mid">${esc(st?.title || "Live Quiz")}</div>${st && st.disqualified ? `<span class="pill" title="Left the quiz screen">🚫 ${st.disqualified}</span>` : ""}${st && st.phase !== "none" ? `<span class="pill">👥 ${st.count}</span>` : ""}</div>`;
@@ -131,8 +130,10 @@ const foot = `<div class="foot">SR EDU TECHNOLOGIES PVT. LTD. · INNOVATE · EDU
 async function act(action, extra) {
   if (busy) return; busy = true;
   try {
-    const r = await fetch(API + "/host", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ pin, action, ...(extra || {}) }) }).then((r) => r.json());
-    if (r.error) alert(r.error);
+    // question actions name the question they were pressed for; the server ignores them if the game has moved on
+    const index = extra && extra.index != null ? extra.index : (st && st.index != null ? st.index : null);
+    const r = await rpc("lg_host_action", { p_pin: pin, p_action: action, p_index: index });
+    if (r && r.error) alert(r.error);
   } catch { alert("No connection. Try again."); }
   busy = false; await poll(true);
 }
@@ -147,7 +148,7 @@ function pinScreen(msg) {
   i.addEventListener("keydown", (e) => { if (e.key === "Enter") document.getElementById("go").click(); });
   document.getElementById("go").onclick = async () => {
     pin = i.value.trim();
-    const r = await fetch(API + "/host", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ pin, action: "check" }) }).then((r) => r.json()).catch(() => ({ error: "No connection." }));
+    const r = await rpc("lg_host_action", { p_pin: pin, p_action: "check", p_index: null }).catch(() => ({ error: "No connection." }));
     if (r.error) return pinScreen(r.error);
     try { localStorage.setItem("srq-host-pin", pin); } catch {}
     start();
@@ -160,6 +161,7 @@ async function poll(force) {
     const next = await rpc("lg_host_state", { p_pin: pin });
     if (next && next.error) { try { localStorage.removeItem("srq-host-pin"); } catch {} return pinScreen("Enter your host PIN"); }
     if (!next || !next.serverNow) return;
+    lastOk = Date.now();
     skew = new Date(next.serverNow).getTime() - (t0 + Date.now()) / 2;
     const key = JSON.stringify([next.phase, next.index, next.answerShown, next.paused, next.status, next.count, next.answered, next.startedAt, next.limitMs,
       next.phase === "lobby" ? next.players?.length : 0, next.phase === "review" ? next.question?.options?.map((o) => o.count) : 0]);
@@ -280,7 +282,8 @@ function tick() {
   if (tv) tv.textContent = s.paused ? "⏸" : Math.max(0, Math.ceil(leftMs / 1000));
   if (tm) { tm.style.setProperty("--p", `${Math.max(0, Math.min(100, (leftMs / s.limitMs) * 100))}%`); tm.classList.toggle("low", leftMs < 6000); }
   // time's up: close the question once (the app's host screen does the same)
-  if (!s.paused && leftMs <= -500 && closedFor !== s.index) { closedFor = s.index; act("reveal"); }
+  // only when this screen heard from the server in the last 3 s (a sleeping or stale screen never closes a question)
+  if (!s.paused && leftMs <= -500 && closedFor !== s.index && Date.now() - lastOk < 3000) { closedFor = s.index; act("reveal", { index: s.index }); }
 }
 
 function confetti() {
